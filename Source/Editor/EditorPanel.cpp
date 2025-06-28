@@ -28,7 +28,7 @@ EditorPanel::~EditorPanel() {
 }
 
 void EditorPanel::paint(juce::Graphics& g) {
-
+    // Nothing for now.
 }
 
 void EditorPanel::resized() {

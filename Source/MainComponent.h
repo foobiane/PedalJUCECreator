@@ -2,7 +2,7 @@
 
 #include <JuceHeader.h>
 
-#include "EditorPanel.h"
+#include "Editor/EditorPanel.h"
 
 #include <string>
 
