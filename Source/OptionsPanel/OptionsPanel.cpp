@@ -31,12 +31,15 @@ void OptionsPanel::onSelectionChange() {
         previouslySelectedComponent = currentlySelectedComponent;
 
         if (currentlySelectedComponent != nullptr) {
-            for (int i = 0; i < currentlySelectedComponent->sliders.size(); i++) {
-                juce::Slider* s = (currentlySelectedComponent->sliders.begin() + i).second;
-
+            int i = 0;
+            for (auto& kv : currentlySelectedComponent->sliders) {
+                juce::Slider* s = kv.second;
+                
                 s->setBounds(10, 25 * (i + 1), panelWidth - 20, 25);
                 addAndMakeVisible(s);
                 printf("Adding slider\n"); // debug
+
+                i++;
             }
         }
     }

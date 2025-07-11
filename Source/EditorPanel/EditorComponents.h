@@ -3,7 +3,6 @@
 #include <JuceHeader.h>
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 // Forward declarations
@@ -28,30 +27,35 @@ class BasicEditorComponent : public juce::Component, public juce::Slider::Listen
         virtual void mouseUp(const juce::MouseEvent& e) final;
 
         virtual void sliderValueChanged(juce::Slider* s) override;
+        virtual void userDefinedSliderChecks(juce::Slider* s) {  }
 
         bool isTrashVisible();
         void toggleTrashVisibility();
 
         int getWidth() { return width; }
         int getHeight() { return height; }
-        juce::Colour getColour() { return juce::Colour((float) hue, (float) saturation, (float) lightness, (float) alpha); }
+        juce::Colour getColour() { return juce::Colour(hue, saturation, lightness, alpha); }
 
         void setWidth(int newWidth);
         void setHeight(int newHeight);
-        void setColour(juce::Colour newColour);
 
-        std::map<std::string, juce::Slider*> sliders;
+        void setHue(float newHue) { hue = newHue; repaint(); }
+        void setSaturation(float newSaturation) { saturation = newSaturation; repaint(); }
+        void setLightness(float newLightness) { lightness = newLightness; repaint(); }
+        void setAlpha(float newAlpha) { alpha = newAlpha; repaint(); }
+
+        std::vector<std::pair<std::string, juce::Slider*>> sliders;
 
     protected:
         void adjustBounds();
 
-        double width;
-        double height;
+        float width;
+        float height;
 
-        double hue;
-        double saturation;
-        double lightness;
-        double alpha;
+        float hue;
+        float saturation;
+        float lightness;
+        float alpha;
 
         virtual void addSlider(std::string name, double initialValue, double min, double max, double interval) final;
 
@@ -97,6 +101,7 @@ class RectangleComponent : public BasicEditorComponent {
 
         virtual void paint(juce::Graphics& g) override;
         virtual void resized() override;
+        virtual void userDefinedSliderChecks(juce::Slider* s) override {}
 
     private:
         double cornerSize;

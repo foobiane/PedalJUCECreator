@@ -43,6 +43,7 @@ void EditorPanel::mouseUp(const juce::MouseEvent& e) {
         currentlySelectedComponent->toggleTrashVisibility(); // turn off trash icon if we clicked elsewhere in the editor
         currentlySelectedComponent = nullptr;
 
+        // Updating listeners
         for (SelectedComponentListener* listener : listeners)
             listener->onSelectionChange();
     }

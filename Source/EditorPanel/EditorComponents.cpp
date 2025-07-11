@@ -1,9 +1,12 @@
 #include "EditorComponents.h"
 #include "EditorPanel.h"
 
+#include <cassert>
+#include <cstdio>
+
 // Externs
-std::vector<SelectedComponentListener*> listeners;
 BasicEditorComponent* currentlySelectedComponent = nullptr;
+std::vector<SelectedComponentListener*> listeners = {};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // BasicEditorComponent                                                                          //
@@ -16,16 +19,16 @@ BasicEditorComponent::BasicEditorComponent(EditorPanel* editorPanel, double widt
     hue(hslaColour.getHue()),
     saturation(hslaColour.getSaturation()),
     lightness(hslaColour.getLightness()),
-    alpha(hslaColour.getAlpha()),
+    alpha(hslaColour.getFloatAlpha()),
     trashIcon(this)
 {
     addSlider("Width", width, 0, 1000, 1);
     addSlider("Height", height, 0, 1000, 1);
 
-    addSlider("Hue", hue, 0, 1, 0.01);
-    addSlider("Saturation", saturation, 0, 1, 0.01);
-    addSlider("Lightness", lightness, 0, 1, 0.01);
-    addSlider("Alpha", alpha, 0, 1, 0.01);
+    addSlider("Hue", hue, 0.0f, 1.0f, 0.01f);
+    addSlider("Saturation", saturation, 0.0f, 1.0f, 0.01f);
+    addSlider("Lightness", lightness, 0.0f, 1.0f, 0.01f);
+    addSlider("Alpha", alpha, 0.0f, 1.0f, 0.01f);
 
     setBounds(0, 0, width, height);
 }
@@ -35,19 +38,28 @@ void BasicEditorComponent::sliderValueChanged(juce::Slider* s) {
         if (kv.second == s) {
             if (kv.first == "Width") {
                 width = s->getValue();
-
-                juce::Point<float> pos = getPosition().toFloat();
-                setBounds(pos.x, pos.y, width, height);
-                repaint();
+                adjustBounds();
             }
+
             else if (kv.first == "Height") {
                 height = s->getValue();
-
-                juce::Point<float> pos = getPosition().toFloat();
-                setBounds(pos.x, pos.y, width, height);
-                repaint();
+                adjustBounds();
             }
-            // TODO: Do the same for HSLA
+
+            else if (kv.first == "Hue")
+                setHue(s->getValue());
+
+            else if (kv.first == "Saturation")
+                setSaturation(s->getValue());
+
+            else if (kv.first == "Lightness")
+                setLightness(s->getValue());
+            
+            else if (kv.first == "Alpha")
+                setAlpha(s->getValue());
+
+            userDefinedSliderChecks(s);
+
             break;
         }
     }
@@ -69,21 +81,24 @@ void BasicEditorComponent::resized() {
 void BasicEditorComponent::adjustBounds() {
     juce::Point<int> pos = getPosition();
     setBounds(pos.x, pos.y, width, height);
+
+    trashIcon.setBounds(width - 25, 0, 25, 25);
+
     repaint();
 }
 
 void BasicEditorComponent::addSlider(std::string name, double initialValue, double min, double max, double interval) {
-    static_assert(initial_value >= min && initialValue <= max);
+    assert(initialValue >= min && initialValue <= max);
     
-    sliders.insert({name, new juce::Slider(name)});
+    sliders.push_back({name, new juce::Slider(name)});
 
-    sliders[name].second->setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
-    sliders[name].second->showTextBox();
+    sliders[sliders.size() - 1].second->setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
+    // sliders[name]->showTextBox();
 
-    sliders[name].second->setRange(min, max, interval);
-    sliders[name].second->setValue(initialValue);
+    sliders[sliders.size() - 1].second->setRange(min, max, interval);
+    sliders[sliders.size() - 1].second->setValue(initialValue);
 
-    sliders[name].second->addListener(this);
+    sliders[sliders.size() - 1].second->addListener(this);
 }
 
 void BasicEditorComponent::mouseDown(const juce::MouseEvent& e) {
@@ -105,7 +120,7 @@ void BasicEditorComponent::mouseUp(const juce::MouseEvent& e) {
     currentlySelectedComponent = this;
     currentlySelectedComponent->toggleTrashVisibility(); // turn on trash icon for new selection
 
-    for (auto* listener : listeners)
+    for (SelectedComponentListener* listener : listeners)
         listener->onSelectionChange();
 }
 
@@ -133,15 +148,6 @@ void BasicEditorComponent::setWidth(int newWidth) {
 void BasicEditorComponent::setHeight(int newHeight) {
     height = newHeight; 
     adjustBounds();
-}
-
-void BasicEditorComponent::setColour(juce::Colour newColour) {
-    hue = newColour.getHue();
-    saturation = newColour.getSaturation();
-    lightness = newColour.getLightness();
-    alpha = newColour.getAlpha();
-
-    repaint();
 }
 
 
