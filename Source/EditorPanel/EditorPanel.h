@@ -6,18 +6,20 @@
 
 class EditorPanel : public juce::Component {
     public:
-        EditorPanel(int editorWidth, int editorHeight);
+        EditorPanel(double x, double y, double editorWidth, double editorHeight);
         ~EditorPanel();
 
         virtual void paint(juce::Graphics& g) override;
         virtual void resized() override;
 
+        virtual void mouseUp(const juce::MouseEvent& e) override;
+
         void addComponentToEditor(const std::string& name);
         void removeComponentFromEditor(BasicEditorComponent* who);
 
     private:
-        int editorWidth;
-        int editorHeight;
+        double editorWidth;
+        double editorHeight;
 
         juce::ComboBox componentSelect;
 

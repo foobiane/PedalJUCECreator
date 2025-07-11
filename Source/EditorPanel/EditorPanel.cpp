@@ -1,6 +1,8 @@
 #include "EditorPanel.h"
 
-EditorPanel::EditorPanel(int editorWidth, int editorHeight) :
+#include <cstdio>
+
+EditorPanel::EditorPanel(double x, double y, double editorWidth, double editorHeight) :
     editorWidth(editorWidth),
     editorHeight(editorHeight)
 {
@@ -19,7 +21,7 @@ EditorPanel::EditorPanel(int editorWidth, int editorHeight) :
     addAndMakeVisible(addComponent);
     addAndMakeVisible(componentSelect);
 
-    setSize(editorWidth, editorHeight);
+    setBounds(x, y, editorWidth, editorHeight);
 }
 
 EditorPanel::~EditorPanel() {
@@ -34,6 +36,16 @@ void EditorPanel::paint(juce::Graphics& g) {
 void EditorPanel::resized() {
     for (auto* editorComponent : editorComponents)
         editorComponent->resized();
+}
+
+void EditorPanel::mouseUp(const juce::MouseEvent& e) {
+    if (currentlySelectedComponent != nullptr && currentlySelectedComponent->isTrashVisible()) {
+        currentlySelectedComponent->toggleTrashVisibility(); // turn off trash icon if we clicked elsewhere in the editor
+        currentlySelectedComponent = nullptr;
+
+        for (SelectedComponentListener* listener : listeners)
+            listener->onSelectionChange();
+    }
 }
 
 void EditorPanel::addComponentToEditor(const std::string& name) {

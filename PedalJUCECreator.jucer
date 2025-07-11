@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="JJol21" name="PedalJUCECreator" projectType="guiapp" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" cppLanguageStandard="20">
   <MAINGROUP id="u2fZMM" name="PedalJUCECreator">
     <GROUP id="{89AA82B9-A3FF-8DB0-7F32-0F78E6DA8C82}" name="Resources">
       <GROUP id="{5BF57366-9F10-64A7-A4AE-8C3185B7A447}" name="Icons">
@@ -9,12 +9,19 @@
       </GROUP>
     </GROUP>
     <GROUP id="{2C768070-4F53-2855-099A-EEABF1570C61}" name="Source">
-      <FILE id="OljyJI" name="EditorPanel.cpp" compile="1" resource="0" file="Source/EditorPanel.cpp"/>
-      <FILE id="DMlbhT" name="EditorPanel.h" compile="0" resource="0" file="Source/EditorPanel.h"/>
-      <FILE id="bCWmMl" name="EditorComponents.cpp" compile="1" resource="0"
-            file="Source/EditorComponents.cpp"/>
-      <FILE id="gBkUuB" name="EditorComponents.h" compile="0" resource="0"
-            file="Source/EditorComponents.h"/>
+      <GROUP id="{B69F835F-AF31-D625-8D22-DF269A85A3D0}" name="OptionsPanel">
+        <FILE id="r1wIST" name="OptionsPanel.cpp" compile="1" resource="0"
+              file="Source/OptionsPanel/OptionsPanel.cpp"/>
+        <FILE id="p0cPtt" name="OptionsPanel.h" compile="0" resource="0" file="Source/OptionsPanel/OptionsPanel.h"/>
+      </GROUP>
+      <GROUP id="{A381637E-4968-F7D7-E808-0D6127F732AF}" name="EditorPanel">
+        <FILE id="HIKeKs" name="EditorComponents.cpp" compile="1" resource="0"
+              file="Source/EditorPanel/EditorComponents.cpp"/>
+        <FILE id="uK12ZH" name="EditorComponents.h" compile="0" resource="0"
+              file="Source/EditorPanel/EditorComponents.h"/>
+        <FILE id="zzL55q" name="EditorPanel.cpp" compile="1" resource="0" file="Source/EditorPanel/EditorPanel.cpp"/>
+        <FILE id="eNVRXg" name="EditorPanel.h" compile="0" resource="0" file="Source/EditorPanel/EditorPanel.h"/>
+      </GROUP>
       <FILE id="xs4Pn4" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="b2NNDi" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
       <FILE id="u1KaiE" name="MainComponent.cpp" compile="1" resource="0"

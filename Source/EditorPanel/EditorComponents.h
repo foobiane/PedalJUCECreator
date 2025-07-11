@@ -2,7 +2,11 @@
 
 #include <JuceHeader.h>
 
-// Forward declaration
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+// Forward declarations
 class EditorPanel;
 
 /**
@@ -11,9 +15,10 @@ class EditorPanel;
  * This class encapsulates the shared behaviors of all components added to the editor.
  */
 
-class BasicEditorComponent : public juce::Component {
+class BasicEditorComponent : public juce::Component, public juce::Slider::Listener {
     public:
-        BasicEditorComponent(EditorPanel* mainComponent, int width, int height, juce::Colour hslaColour);
+        BasicEditorComponent(EditorPanel* mainComponent, double width, double height, juce::Colour hslaColour);
+        ~BasicEditorComponent();
 
         virtual void paint(juce::Graphics& g) override;
         virtual void resized() override;
@@ -22,16 +27,33 @@ class BasicEditorComponent : public juce::Component {
         virtual void mouseDrag(const juce::MouseEvent& e) final;
         virtual void mouseUp(const juce::MouseEvent& e) final;
 
+        virtual void sliderValueChanged(juce::Slider* s) override;
+
+        bool isTrashVisible();
+        void toggleTrashVisibility();
+
+        int getWidth() { return width; }
+        int getHeight() { return height; }
+        juce::Colour getColour() { return juce::Colour((float) hue, (float) saturation, (float) lightness, (float) alpha); }
+
         void setWidth(int newWidth);
         void setHeight(int newHeight);
         void setColour(juce::Colour newColour);
 
+        std::map<std::string, juce::Slider*> sliders;
+
     protected:
         void adjustBounds();
 
-        int width;
-        int height;
-        juce::Colour hslaColour;
+        double width;
+        double height;
+
+        double hue;
+        double saturation;
+        double lightness;
+        double alpha;
+
+        virtual void addSlider(std::string name, double initialValue, double min, double max, double interval) final;
 
     private:
         juce::ComponentDragger drag;
@@ -64,15 +86,32 @@ class BasicEditorComponent : public juce::Component {
         EditorPanel* editorPanel;
 };
 
+/**
+ * RectangleComponent:
+ * 
+ * A simple rectangle object, with additional controls for corner size.
+ */
 class RectangleComponent : public BasicEditorComponent {
     public:
-        RectangleComponent(EditorPanel* editorPanel, int width, int height, juce::Colour hslaColour);
+        RectangleComponent(EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour);
 
         virtual void paint(juce::Graphics& g) override;
         virtual void resized() override;
 
-        void setCornerSize(float newCornerSize);
-
     private:
-        float cornerSize;
+        double cornerSize;
 };
+
+/**
+ * Logic for the currently selected component.
+ */
+
+extern BasicEditorComponent* currentlySelectedComponent;
+
+class SelectedComponentListener {
+    public:
+        SelectedComponentListener();
+        virtual void onSelectionChange();
+};
+
+extern std::vector<SelectedComponentListener*> listeners;
