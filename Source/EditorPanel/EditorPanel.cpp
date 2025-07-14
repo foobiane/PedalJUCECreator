@@ -1,8 +1,9 @@
 #include "EditorPanel.h"
 
 #include <cstdio>
+#include <limits>
 
-EditorPanel::EditorPanel(double x, double y, double editorWidth, double editorHeight) :
+EditorPanel::EditorPanel(float x, float y, float editorWidth, float editorHeight) :
     editorWidth(editorWidth),
     editorHeight(editorHeight)
 {
@@ -43,9 +44,7 @@ void EditorPanel::mouseUp(const juce::MouseEvent& e) {
         currentlySelectedComponent->toggleTrashVisibility(); // turn off trash icon if we clicked elsewhere in the editor
         currentlySelectedComponent = nullptr;
 
-        // Updating listeners
-        for (SelectedComponentListener* listener : listeners)
-            listener->onSelectionChange();
+        SelectedComponentListener::update();
     }
 }
 
@@ -62,4 +61,22 @@ void EditorPanel::removeComponentFromEditor(BasicEditorComponent* who) {
     removeChildComponent(who);
     editorComponents.erase(who);
     delete who;
+}
+
+/**
+ * getMinimumBoundingBoxForComponents:
+ * 
+ * Returns the minimum-sized bounding box that contains all elements in the editor panel. 
+ */
+juce::Rectangle<float> EditorPanel::getMinimumBoundingBoxForComponents() {
+    if (editorComponents.size() >= 1) {
+        juce::Rectangle<float> result = (*editorComponents.begin())->getBounds().toFloat();
+
+        for (auto itr = editorComponents.begin(); itr != editorComponents.end(); itr++)
+            result = result.getUnion((*itr)->getBounds().toFloat());
+
+        return result;
+    }
+
+    return getBounds().toFloat(); // no components -> return the bounds of the panel by default
 }

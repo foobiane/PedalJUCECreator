@@ -9,6 +9,10 @@
       </GROUP>
     </GROUP>
     <GROUP id="{2C768070-4F53-2855-099A-EEABF1570C61}" name="Source">
+      <GROUP id="{0A16228E-FE19-3F1D-7FFA-8249BA8484FD}" name="CodePanel">
+        <FILE id="S05ku0" name="CodePanel.cpp" compile="1" resource="0" file="Source/CodePanel/CodePanel.cpp"/>
+        <FILE id="txIVLK" name="CodePanel.h" compile="0" resource="0" file="Source/CodePanel/CodePanel.h"/>
+      </GROUP>
       <GROUP id="{B69F835F-AF31-D625-8D22-DF269A85A3D0}" name="OptionsPanel">
         <FILE id="r1wIST" name="OptionsPanel.cpp" compile="1" resource="0"
               file="Source/OptionsPanel/OptionsPanel.cpp"/>

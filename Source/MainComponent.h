@@ -4,6 +4,7 @@
 
 #include "EditorPanel/EditorPanel.h"
 #include "OptionsPanel/OptionsPanel.h"
+#include "CodePanel/CodePanel.h"
 
 #include <string>
 
@@ -20,6 +21,7 @@ class MainComponent : public juce::Component {
 
         EditorPanel editorPanel;
         OptionsPanel optionsPanel;
+        CodePanel codePanel;
 
     private:
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

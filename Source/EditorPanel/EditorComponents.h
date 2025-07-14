@@ -16,7 +16,7 @@ class EditorPanel;
 
 class BasicEditorComponent : public juce::Component, public juce::Slider::Listener {
     public:
-        BasicEditorComponent(EditorPanel* mainComponent, double width, double height, juce::Colour hslaColour);
+        BasicEditorComponent(std::string editorComponentName, EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour);
         ~BasicEditorComponent();
 
         virtual void paint(juce::Graphics& g) override;
@@ -27,22 +27,27 @@ class BasicEditorComponent : public juce::Component, public juce::Slider::Listen
         virtual void mouseUp(const juce::MouseEvent& e) final;
 
         virtual void sliderValueChanged(juce::Slider* s) override;
-        virtual void userDefinedSliderChecks(juce::Slider* s) {  }
+        virtual void userDefinedSliderChecks(std::string name, juce::Slider* s) = 0;
+
+        virtual std::string generateConstructorCode() = 0;
+        virtual std::string generatePaintCode() = 0;
 
         bool isTrashVisible();
         void toggleTrashVisibility();
 
-        int getWidth() { return width; }
-        int getHeight() { return height; }
+        float getWidth() { return width; }
+        float getHeight() { return height; }
         juce::Colour getColour() { return juce::Colour(hue, saturation, lightness, alpha); }
+
+        std::string getEditorComponentName() { return editorComponentName; }
 
         void setWidth(int newWidth);
         void setHeight(int newHeight);
 
-        void setHue(float newHue) { hue = newHue; repaint(); }
-        void setSaturation(float newSaturation) { saturation = newSaturation; repaint(); }
-        void setLightness(float newLightness) { lightness = newLightness; repaint(); }
-        void setAlpha(float newAlpha) { alpha = newAlpha; repaint(); }
+        void setHue(float newHue);
+        void setSaturation(float newSaturation);
+        void setLightness(float newLightness);
+        void setAlpha(float newAlpha);
 
         std::vector<std::pair<std::string, juce::Slider*>> sliders;
 
@@ -57,7 +62,9 @@ class BasicEditorComponent : public juce::Component, public juce::Slider::Listen
         float lightness;
         float alpha;
 
-        virtual void addSlider(std::string name, double initialValue, double min, double max, double interval) final;
+        virtual void addSlider(std::string name, double initialValue, double min, double max, double interval, juce::Slider::SliderStyle style = juce::Slider::SliderStyle::LinearHorizontal) final;
+
+        EditorPanel* editorPanel;
 
     private:
         juce::ComponentDragger drag;
@@ -86,8 +93,8 @@ class BasicEditorComponent : public juce::Component, public juce::Slider::Listen
 
         bool showingTrashIcon = false;
         TrashIcon trashIcon;
-
-        EditorPanel* editorPanel;
+        
+        std::string editorComponentName;
 };
 
 /**
@@ -101,14 +108,19 @@ class RectangleComponent : public BasicEditorComponent {
 
         virtual void paint(juce::Graphics& g) override;
         virtual void resized() override;
-        virtual void userDefinedSliderChecks(juce::Slider* s) override {}
+        virtual void userDefinedSliderChecks(std::string name, juce::Slider* s) override;
+
+        void setCornerSize(float newCornerSize);
+
+        virtual std::string generateConstructorCode() override;
+        virtual std::string generatePaintCode() override;
 
     private:
-        double cornerSize;
+        float cornerSize;
 };
 
 /**
- * Logic for the currently selected component.
+ * Contains the logic for the classes that listen for the currently selected component.
  */
 
 extern BasicEditorComponent* currentlySelectedComponent;
@@ -116,7 +128,25 @@ extern BasicEditorComponent* currentlySelectedComponent;
 class SelectedComponentListener {
     public:
         SelectedComponentListener();
-        virtual void onSelectionChange();
+        virtual ~SelectedComponentListener() = default;
+
+        virtual void onSelectionChange() = 0;
+        static void update();
 };
 
-extern std::vector<SelectedComponentListener*> listeners;
+extern std::vector<SelectedComponentListener*> selectedComponentListeners;
+
+/**
+ * Contains the logic for classes that listen for changes in any editor component.
+ */
+
+ class EditorComponentListener {
+    public:
+        EditorComponentListener();
+        virtual ~EditorComponentListener() = default;
+
+        virtual void onEditorComponentChange() = 0; 
+        static void update();
+ };
+
+extern std::vector<EditorComponentListener*> editorComponentListeners;

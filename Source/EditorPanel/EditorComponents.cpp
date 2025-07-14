@@ -6,13 +6,16 @@
 
 // Externs
 BasicEditorComponent* currentlySelectedComponent = nullptr;
-std::vector<SelectedComponentListener*> listeners = {};
+
+std::vector<SelectedComponentListener*> selectedComponentListeners = {};
+std::vector<EditorComponentListener*> editorComponentListeners = {};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // BasicEditorComponent                                                                          //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-BasicEditorComponent::BasicEditorComponent(EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour) :
+BasicEditorComponent::BasicEditorComponent(std::string editorComponentName, EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour) :
+    editorComponentName(editorComponentName),
     editorPanel(editorPanel),
     width(width),
     height(height),
@@ -58,7 +61,7 @@ void BasicEditorComponent::sliderValueChanged(juce::Slider* s) {
             else if (kv.first == "Alpha")
                 setAlpha(s->getValue());
 
-            userDefinedSliderChecks(s);
+            userDefinedSliderChecks(kv.first, s);
 
             break;
         }
@@ -87,12 +90,12 @@ void BasicEditorComponent::adjustBounds() {
     repaint();
 }
 
-void BasicEditorComponent::addSlider(std::string name, double initialValue, double min, double max, double interval) {
+void BasicEditorComponent::addSlider(std::string name, double initialValue, double min, double max, double interval, juce::Slider::SliderStyle style) {
     assert(initialValue >= min && initialValue <= max);
     
     sliders.push_back({name, new juce::Slider(name)});
 
-    sliders[sliders.size() - 1].second->setSliderStyle(juce::Slider::SliderStyle::LinearHorizontal);
+    sliders[sliders.size() - 1].second->setSliderStyle(style);
     // sliders[name]->showTextBox();
 
     sliders[sliders.size() - 1].second->setRange(min, max, interval);
@@ -117,11 +120,14 @@ void BasicEditorComponent::mouseUp(const juce::MouseEvent& e) {
     )
         currentlySelectedComponent->toggleTrashVisibility(); // turn off trash icon for previous selection, if applicable
 
-    currentlySelectedComponent = this;
-    currentlySelectedComponent->toggleTrashVisibility(); // turn on trash icon for new selection
+    else if (currentlySelectedComponent != this) {
+        currentlySelectedComponent = this;
+        currentlySelectedComponent->toggleTrashVisibility(); // turn on trash icon for new selection
 
-    for (SelectedComponentListener* listener : listeners)
-        listener->onSelectionChange();
+        SelectedComponentListener::update();
+    }
+
+    EditorComponentListener::update();
 }
 
 bool BasicEditorComponent::isTrashVisible() {
@@ -142,16 +148,48 @@ void BasicEditorComponent::toggleTrashVisibility() {
 
 void BasicEditorComponent::setWidth(int newWidth) {
     width = newWidth;
+    EditorComponentListener::update();
     adjustBounds();
 }
 
 void BasicEditorComponent::setHeight(int newHeight) {
     height = newHeight; 
+    EditorComponentListener::update();
     adjustBounds();
+}
+
+void BasicEditorComponent::setHue(float newHue) { 
+    hue = newHue; 
+    EditorComponentListener::update();
+    repaint(); 
+}
+
+void BasicEditorComponent::setSaturation(float newSaturation) { 
+    saturation = newSaturation; 
+    EditorComponentListener::update();
+    repaint(); 
+}
+
+void BasicEditorComponent::setLightness(float newLightness) { 
+    lightness = newLightness; 
+    EditorComponentListener::update();
+    repaint(); 
+}
+
+void BasicEditorComponent::setAlpha(float newAlpha) { 
+    alpha = newAlpha; 
+    EditorComponentListener::update();
+    repaint(); 
 }
 
 
 void BasicEditorComponent::TrashIcon::mouseUp(const juce::MouseEvent& e) {
+    currentlySelectedComponent = nullptr;
+    SelectedComponentListener::update();
+
+    editorComponent->editorPanel->editorComponents.erase(editorComponent);
+    EditorComponentListener::update();
+
     editorComponent->editorPanel->removeComponentFromEditor(editorComponent);
 }
 
@@ -160,7 +198,7 @@ void BasicEditorComponent::TrashIcon::mouseUp(const juce::MouseEvent& e) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 RectangleComponent::RectangleComponent(EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour) :
-    BasicEditorComponent(editorPanel, width, height, hslaColour)
+    BasicEditorComponent("Rectangle", editorPanel, width, height, hslaColour)
 {
     addSlider("Corner Size", cornerSize, 0, 100, 1);
 }
@@ -174,14 +212,65 @@ void RectangleComponent::resized() {
     // Nothing here.
 }
 
+void RectangleComponent::userDefinedSliderChecks(std::string name, juce::Slider* s) {
+    if (name == "Corner Size")
+        setCornerSize(s->getValue());
+}
+
+void RectangleComponent::setCornerSize(float newCornerSize) {
+    cornerSize = newCornerSize;
+    EditorComponentListener::update();
+    repaint();
+}
+
+std::string RectangleComponent::generateConstructorCode() {
+    return "";
+}
+
+std::string RectangleComponent::generatePaintCode() {
+    juce::Rectangle<float> trueBounds = editorPanel->getMinimumBoundingBoxForComponents();
+    juce::Point<float> topLeftAdjusted = getBounds().getTopLeft().toFloat() - trueBounds.getTopLeft();
+
+    std::string colourCode = ("\tg.setColour(juce::Colour(" + 
+        std::to_string(hue) + "f, " +
+        std::to_string(saturation) + "f, " +
+        std::to_string(lightness) + "f, " +
+        std::to_string(alpha) + "f));\n"
+    );
+
+    std::string rectCode = ("\tg.fillRoundedRectangle(" + 
+        std::to_string(topLeftAdjusted.x) + "f, " +
+        std::to_string(topLeftAdjusted.y) + "f, " +
+        std::to_string(width) + "f, " +
+        std::to_string(height) + "f, " +
+        std::to_string(cornerSize) + "f);\n\n"
+    );
+
+    return colourCode + rectCode;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // SelectedComponentListener                                                                     //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 SelectedComponentListener::SelectedComponentListener() {
-    listeners.push_back(this);
+    selectedComponentListeners.push_back(this);
 }
 
-void SelectedComponentListener::onSelectionChange() {
-    // Nothing.
+void SelectedComponentListener::update() {
+    for (SelectedComponentListener* listener : selectedComponentListeners)
+        listener->onSelectionChange();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// EditorComponentListener                                                                       //
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+EditorComponentListener::EditorComponentListener() {
+    editorComponentListeners.push_back(this);
+}
+
+void EditorComponentListener::update() {
+    for (EditorComponentListener* listener : editorComponentListeners)
+        listener->onEditorComponentChange();
 }

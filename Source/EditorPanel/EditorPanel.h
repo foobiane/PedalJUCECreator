@@ -6,7 +6,7 @@
 
 class EditorPanel : public juce::Component {
     public:
-        EditorPanel(double x, double y, double editorWidth, double editorHeight);
+        EditorPanel(float x, float y, float editorWidth, float editorHeight);
         ~EditorPanel();
 
         virtual void paint(juce::Graphics& g) override;
@@ -17,9 +17,13 @@ class EditorPanel : public juce::Component {
         void addComponentToEditor(const std::string& name);
         void removeComponentFromEditor(BasicEditorComponent* who);
 
+        juce::Rectangle<float> getMinimumBoundingBoxForComponents();
+
+        std::unordered_set<BasicEditorComponent*> editorComponents;
+
     private:
-        double editorWidth;
-        double editorHeight;
+        float editorWidth;
+        float editorHeight;
 
         juce::ComboBox componentSelect;
 
@@ -37,5 +41,5 @@ class EditorPanel : public juce::Component {
 
         AddComponentButton addComponent;
 
-        std::unordered_set<BasicEditorComponent*> editorComponents;
+        BasicEditorComponent* previouslySelectedComponent = nullptr;
 };

@@ -7,7 +7,7 @@
 
 class OptionsPanel : public juce::Component, public SelectedComponentListener {
     public:
-        OptionsPanel(EditorPanel* editorPanel, double x, double y, double panelWidth, double panelHeight);
+        OptionsPanel(EditorPanel* editorPanel, float x, float y, float panelWidth, float panelHeight);
 
         virtual void onSelectionChange() override;
 
@@ -15,8 +15,8 @@ class OptionsPanel : public juce::Component, public SelectedComponentListener {
         virtual void resized() override;
 
     private:
-        double panelWidth;
-        double panelHeight;
+        float panelWidth;
+        float panelHeight;
 
         BasicEditorComponent* previouslySelectedComponent = nullptr;
 
