@@ -13,12 +13,13 @@ class EditorPanel;
  * 
  * This class encapsulates the shared behaviors of all components added to the editor.
  */
-
-class BasicEditorComponent : public juce::Component, public juce::Slider::Listener {
+class BasicEditorComponent : public juce::Component
+{
     public:
-        BasicEditorComponent(std::string editorComponentName, EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour);
+        BasicEditorComponent(std::string editorComponentName, EditorPanel* editorPanel, float width, float height, juce::Colour hslaColour);
         ~BasicEditorComponent();
 
+        // Component logic
         virtual void paint(juce::Graphics& g) override;
         virtual void resized() override;
 
@@ -26,30 +27,31 @@ class BasicEditorComponent : public juce::Component, public juce::Slider::Listen
         virtual void mouseDrag(const juce::MouseEvent& e) final;
         virtual void mouseUp(const juce::MouseEvent& e) final;
 
-        virtual void sliderValueChanged(juce::Slider* s) override;
-        virtual void userDefinedSliderChecks(std::string name, juce::Slider* s) = 0;
-
+        // Code generation
         virtual std::string generateConstructorCode() = 0;
         virtual std::string generatePaintCode() = 0;
 
+        // Trash logic
         bool isTrashVisible();
         void toggleTrashVisibility();
 
+        // Getters
         float getWidth() { return width; }
         float getHeight() { return height; }
         juce::Colour getColour() { return juce::Colour(hue, saturation, lightness, alpha); }
-
         std::string getEditorComponentName() { return editorComponentName; }
 
+        // Setters
+        // Since changes to these parameters should cause a visual change, we need to add logic
+        // for repaints, etc.
         void setWidth(int newWidth);
         void setHeight(int newHeight);
-
         void setHue(float newHue);
         void setSaturation(float newSaturation);
         void setLightness(float newLightness);
         void setAlpha(float newAlpha);
 
-        std::vector<std::pair<std::string, juce::Slider*>> sliders;
+        std::vector<std::pair<std::string, juce::Component*>> controls;
 
     protected:
         void adjustBounds();
@@ -62,7 +64,10 @@ class BasicEditorComponent : public juce::Component, public juce::Slider::Listen
         float lightness;
         float alpha;
 
-        virtual void addSlider(std::string name, double initialValue, double min, double max, double interval, juce::Slider::SliderStyle style = juce::Slider::SliderStyle::LinearHorizontal) final;
+        virtual void addSlider(std::string name, float initialValue, float min, float max, float interval, std::function<void(juce::Slider*)> valueChangeCallback, juce::Slider::SliderStyle style = juce::Slider::SliderStyle::LinearHorizontal) final;
+        virtual void addDropdown(std::string name, std::string initialValue, std::vector<std::string> options, std::function<void(juce::ComboBox*)> valueChangeCallback) final;
+        virtual void addButton(std::string name, bool isToggle, std::function<void(juce::Button*)> valueChangeCallback) final;
+        virtual void addButtonString(std::string buttonStringName, std::vector<std::tuple<std::string, bool, std::function<void(juce::Button*)>>> info) final;
 
         EditorPanel* editorPanel;
 
@@ -97,29 +102,43 @@ class BasicEditorComponent : public juce::Component, public juce::Slider::Listen
         std::string editorComponentName;
 };
 
-/**
- * RectangleComponent:
- * 
- * A simple rectangle object, with additional controls for corner size.
- */
-class RectangleComponent : public BasicEditorComponent {
+// Custom wrapper for a string of buttons in the options panel
+class TextButtonString : public juce::Component {
     public:
-        RectangleComponent(EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour);
+        TextButtonString(std::vector<juce::TextButton*> buttons) :
+            buttons(buttons)
+        {
+        }
 
-        virtual void paint(juce::Graphics& g) override;
-        virtual void resized() override;
-        virtual void userDefinedSliderChecks(std::string name, juce::Slider* s) override;
+        virtual ~TextButtonString() {
+            for (auto* button : buttons)
+                delete button;
+        }
 
-        void setCornerSize(float newCornerSize);
+        virtual void resized() override {
+            juce::Rectangle<int> bounds = getBounds();
 
-        virtual std::string generateConstructorCode() override;
-        virtual std::string generatePaintCode() override;
+            int buttonWidth = (bounds.getWidth() / buttons.size()) * 0.9f;
+            int horizontalPad = ((bounds.getWidth() / buttons.size()) - buttonWidth) / 2;
+
+            int buttonHeight = (bounds.getHeight() / buttons.size()) * 0.9f;
+            int verticalPad = ((bounds.getHeight() / buttons.size()) - buttonHeight) / 2;
+
+            for (int i = 0; i < buttons.size(); i++) {
+                buttons[i]->setBounds(horizontalPad + (i * (buttonWidth + 2 * horizontalPad)), verticalPad, buttonWidth, buttonHeight);
+                addAndMakeVisible(buttons[i]);
+            }
+        }
 
     private:
-        float cornerSize;
+        std::vector<juce::TextButton*> buttons;
 };
 
+// Custom listener logic
+
 /**
+ * SelectedComponentListener:
+ * 
  * Contains the logic for the classes that listen for the currently selected component.
  */
 
@@ -137,6 +156,8 @@ class SelectedComponentListener {
 extern std::vector<SelectedComponentListener*> selectedComponentListeners;
 
 /**
+ * EditorComponentListener:
+ * 
  * Contains the logic for classes that listen for changes in any editor component.
  */
 

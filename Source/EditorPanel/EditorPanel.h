@@ -2,7 +2,8 @@
 
 #include <JuceHeader.h>
 
-#include "EditorComponents.h"
+#include "EditorComponents/BasicEditorComponent.h"
+#include "EditorComponents/Components.h"
 
 class EditorPanel : public juce::Component {
     public:

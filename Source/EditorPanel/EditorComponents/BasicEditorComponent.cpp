@@ -1,6 +1,7 @@
-#include "EditorComponents.h"
-#include "EditorPanel.h"
+#include "BasicEditorComponent.h"
+#include "../EditorPanel.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstdio>
 
@@ -14,7 +15,7 @@ std::vector<EditorComponentListener*> editorComponentListeners = {};
 // BasicEditorComponent                                                                          //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-BasicEditorComponent::BasicEditorComponent(std::string editorComponentName, EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour) :
+BasicEditorComponent::BasicEditorComponent(std::string editorComponentName, EditorPanel* editorPanel, float width, float height, juce::Colour hslaColour) :
     editorComponentName(editorComponentName),
     editorPanel(editorPanel),
     width(width),
@@ -25,51 +26,19 @@ BasicEditorComponent::BasicEditorComponent(std::string editorComponentName, Edit
     alpha(hslaColour.getFloatAlpha()),
     trashIcon(this)
 {
-    addSlider("Width", width, 0, 1000, 1);
-    addSlider("Height", height, 0, 1000, 1);
+    addSlider("Width", width, 0, 1000, 1, [this](juce::Slider* s){setWidth(s->getValue());});
+    addSlider("Height", height, 0, 1000, 1, [this](juce::Slider* s){setHeight(s->getValue());});
 
-    addSlider("Hue", hue, 0.0f, 1.0f, 0.01f);
-    addSlider("Saturation", saturation, 0.0f, 1.0f, 0.01f);
-    addSlider("Lightness", lightness, 0.0f, 1.0f, 0.01f);
-    addSlider("Alpha", alpha, 0.0f, 1.0f, 0.01f);
+    addSlider("Hue", hue, 0.0f, 1.0f, 0.01f, [this](juce::Slider* s){setHue(s->getValue());});
+    addSlider("Saturation", saturation, 0.0f, 1.0f, 0.01f, [this](juce::Slider* s){setSaturation(s->getValue());});
+    addSlider("Lightness", lightness, 0.0f, 1.0f, 0.01f, [this](juce::Slider* s){setLightness(s->getValue());});
+    addSlider("Alpha", alpha, 0.0f, 1.0f, 0.01f, [this](juce::Slider* s){setAlpha(s->getValue());});
 
     setBounds(0, 0, width, height);
 }
 
-void BasicEditorComponent::sliderValueChanged(juce::Slider* s) {
-    for (auto& kv : sliders) {
-        if (kv.second == s) {
-            if (kv.first == "Width") {
-                width = s->getValue();
-                adjustBounds();
-            }
-
-            else if (kv.first == "Height") {
-                height = s->getValue();
-                adjustBounds();
-            }
-
-            else if (kv.first == "Hue")
-                setHue(s->getValue());
-
-            else if (kv.first == "Saturation")
-                setSaturation(s->getValue());
-
-            else if (kv.first == "Lightness")
-                setLightness(s->getValue());
-            
-            else if (kv.first == "Alpha")
-                setAlpha(s->getValue());
-
-            userDefinedSliderChecks(kv.first, s);
-
-            break;
-        }
-    }
-}
-
 BasicEditorComponent::~BasicEditorComponent() {
-    for (auto& kv : sliders)
+    for (auto& kv : controls)
         delete kv.second;
 }
 
@@ -90,18 +59,54 @@ void BasicEditorComponent::adjustBounds() {
     repaint();
 }
 
-void BasicEditorComponent::addSlider(std::string name, double initialValue, double min, double max, double interval, juce::Slider::SliderStyle style) {
+void BasicEditorComponent::addSlider(std::string name, float initialValue, float min, float max, float interval, std::function<void(juce::Slider* s)> valueChangeCallback, juce::Slider::SliderStyle style) {
     assert(initialValue >= min && initialValue <= max);
     
-    sliders.push_back({name, new juce::Slider(name)});
+    controls.push_back({name, new juce::Slider(name)});
+    juce::Slider* s = (juce::Slider*) controls[controls.size() - 1].second;
 
-    sliders[sliders.size() - 1].second->setSliderStyle(style);
-    // sliders[name]->showTextBox();
+    s->setSliderStyle(style);
+    s->setRange(min, max, interval);
+    s->setValue(initialValue);
 
-    sliders[sliders.size() - 1].second->setRange(min, max, interval);
-    sliders[sliders.size() - 1].second->setValue(initialValue);
+    s->onValueChange = [s, valueChangeCallback](){valueChangeCallback(s);};
+}
 
-    sliders[sliders.size() - 1].second->addListener(this);
+void BasicEditorComponent::addDropdown(std::string name, std::string initialValue, std::vector<std::string> options, std::function<void(juce::ComboBox* c)> valueChangeCallback) {
+    assert(std::find(options.begin(), options.end(), initialValue) != options.end());
+
+    controls.push_back({name, new juce::ComboBox(name)});
+    juce::ComboBox* c = (juce::ComboBox*) controls[controls.size() - 1].second;
+
+    for (int i = 0; i < options.size(); i++)
+        c->addItem(options[i], i+1);
+
+    c->setText(initialValue);
+    c->onChange = [c, valueChangeCallback](){valueChangeCallback(c);};
+}
+
+void BasicEditorComponent::addButton(std::string name, bool isToggle, std::function<void(juce::Button*)> valueChangeCallback) {
+    controls.push_back({name, new juce::TextButton(name)});
+    juce::Button* b = (juce::Button*) controls[controls.size() - 1].second;
+
+    b->setToggleable(isToggle);
+    b->onClick = [b, valueChangeCallback](){valueChangeCallback(b);};
+}
+
+void BasicEditorComponent::addButtonString(std::string buttonStringName, std::vector<std::tuple<std::string, bool, std::function<void(juce::Button*)>>> namesAndToggle) {
+    std::vector<juce::TextButton*> buttons;
+
+    for (auto& info : namesAndToggle) {
+        buttons.push_back(new juce::TextButton(std::get<0>(info)));
+
+        juce::Button* b = (juce::Button*) buttons[buttons.size() - 1];
+        b->setToggleable(std::get<1>(info));
+
+        auto valueChangeCallback = std::get<2>(info);
+        b->onClick = [b, valueChangeCallback](){valueChangeCallback(b);};
+    }
+
+    controls.push_back({buttonStringName, new TextButtonString(buttons)});
 }
 
 void BasicEditorComponent::mouseDown(const juce::MouseEvent& e) {
@@ -191,62 +196,6 @@ void BasicEditorComponent::TrashIcon::mouseUp(const juce::MouseEvent& e) {
     EditorComponentListener::update();
 
     editorComponent->editorPanel->removeComponentFromEditor(editorComponent);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-// RectangleComponent                                                                            //
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-RectangleComponent::RectangleComponent(EditorPanel* editorPanel, double width, double height, juce::Colour hslaColour) :
-    BasicEditorComponent("Rectangle", editorPanel, width, height, hslaColour)
-{
-    addSlider("Corner Size", cornerSize, 0, 100, 1);
-}
-
-void RectangleComponent::paint(juce::Graphics& g) {
-    g.setColour(getColour());
-    g.fillRoundedRectangle(getLocalBounds().toFloat(), cornerSize);
-}
-
-void RectangleComponent::resized() {
-    // Nothing here.
-}
-
-void RectangleComponent::userDefinedSliderChecks(std::string name, juce::Slider* s) {
-    if (name == "Corner Size")
-        setCornerSize(s->getValue());
-}
-
-void RectangleComponent::setCornerSize(float newCornerSize) {
-    cornerSize = newCornerSize;
-    EditorComponentListener::update();
-    repaint();
-}
-
-std::string RectangleComponent::generateConstructorCode() {
-    return "";
-}
-
-std::string RectangleComponent::generatePaintCode() {
-    juce::Rectangle<float> trueBounds = editorPanel->getMinimumBoundingBoxForComponents();
-    juce::Point<float> topLeftAdjusted = getBounds().getTopLeft().toFloat() - trueBounds.getTopLeft();
-
-    std::string colourCode = ("\tg.setColour(juce::Colour(" + 
-        std::to_string(hue) + "f, " +
-        std::to_string(saturation) + "f, " +
-        std::to_string(lightness) + "f, " +
-        std::to_string(alpha) + "f));\n"
-    );
-
-    std::string rectCode = ("\tg.fillRoundedRectangle(" + 
-        std::to_string(topLeftAdjusted.x) + "f, " +
-        std::to_string(topLeftAdjusted.y) + "f, " +
-        std::to_string(width) + "f, " +
-        std::to_string(height) + "f, " +
-        std::to_string(cornerSize) + "f);\n\n"
-    );
-
-    return colourCode + rectCode;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

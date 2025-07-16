@@ -3,7 +3,7 @@
 #include <JuceHeader.h>
 
 #include "../EditorPanel/EditorPanel.h"
-#include "../EditorPanel/EditorComponents.h"
+#include "../EditorPanel/EditorComponents/BasicEditorComponent.h"
 
 class OptionsPanel : public juce::Component, public SelectedComponentListener {
     public:

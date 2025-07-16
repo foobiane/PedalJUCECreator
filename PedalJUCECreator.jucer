@@ -19,10 +19,14 @@
         <FILE id="p0cPtt" name="OptionsPanel.h" compile="0" resource="0" file="Source/OptionsPanel/OptionsPanel.h"/>
       </GROUP>
       <GROUP id="{A381637E-4968-F7D7-E808-0D6127F732AF}" name="EditorPanel">
-        <FILE id="HIKeKs" name="EditorComponents.cpp" compile="1" resource="0"
-              file="Source/EditorPanel/EditorComponents.cpp"/>
-        <FILE id="uK12ZH" name="EditorComponents.h" compile="0" resource="0"
-              file="Source/EditorPanel/EditorComponents.h"/>
+        <GROUP id="{F80E3DA4-2575-6209-BB80-DF79F4A8EDE4}" name="EditorComponents">
+          <FILE id="IE3hJ7" name="BasicEditorComponent.cpp" compile="1" resource="0"
+                file="Source/EditorPanel/EditorComponents/BasicEditorComponent.cpp"/>
+          <FILE id="CwsheF" name="BasicEditorComponent.h" compile="0" resource="0"
+                file="Source/EditorPanel/EditorComponents/BasicEditorComponent.h"/>
+          <FILE id="enQ1f0" name="Components.cpp" compile="1" resource="0" file="Source/EditorPanel/EditorComponents/Components.cpp"/>
+          <FILE id="vD8RAW" name="Components.h" compile="0" resource="0" file="Source/EditorPanel/EditorComponents/Components.h"/>
+        </GROUP>
         <FILE id="zzL55q" name="EditorPanel.cpp" compile="1" resource="0" file="Source/EditorPanel/EditorPanel.cpp"/>
         <FILE id="eNVRXg" name="EditorPanel.h" compile="0" resource="0" file="Source/EditorPanel/EditorPanel.h"/>
       </GROUP>
