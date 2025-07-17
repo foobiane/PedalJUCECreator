@@ -10,6 +10,7 @@ BasicEditorComponent* currentlySelectedComponent = nullptr;
 
 std::vector<SelectedComponentListener*> selectedComponentListeners = {};
 std::vector<EditorComponentListener*> editorComponentListeners = {};
+std::vector<ZOrderListener*> zOrderListeners = {};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // BasicEditorComponent                                                                          //
@@ -29,6 +30,8 @@ BasicEditorComponent::BasicEditorComponent(std::string editorComponentName, Edit
     // All editor objects will have these basic sliders.
     addSlider("X", getPosition().x, 0, editorPanel->getEditorWidth(), 1, [this](juce::Slider* s){setTopLeftPosition(juce::Point<int>(s->getValue(), getPosition().y));});
     addSlider("Y", getPosition().y, 0, editorPanel->getEditorHeight(), 1, [this](juce::Slider* s){setTopLeftPosition(juce::Point<int>(getPosition().x, s->getValue()));});
+
+    addSlider("Z Order", zOrder, -1, 100, 1, [this](juce::Slider* s){setZOrder(s->getValue());});
 
     addSlider("Width", width, 0, 1000, 1, [this](juce::Slider* s){setWidth(s->getValue());});
     addSlider("Height", height, 0, 1000, 1, [this](juce::Slider* s){setHeight(s->getValue());});
@@ -202,6 +205,12 @@ void BasicEditorComponent::setAlpha(float newAlpha) {
     repaint(); 
 }
 
+void BasicEditorComponent::setZOrder(int newZOrder) {
+    zOrder = newZOrder;
+    ZOrderListener::update(this);
+    repaint();
+}
+
 
 void BasicEditorComponent::TrashIcon::mouseUp(const juce::MouseEvent& e) {
     currentlySelectedComponent = nullptr;
@@ -237,4 +246,18 @@ EditorComponentListener::EditorComponentListener() {
 void EditorComponentListener::update() {
     for (EditorComponentListener* listener : editorComponentListeners)
         listener->onEditorComponentChange();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+// ZOrderListener                                                                                //
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+ZOrderListener::ZOrderListener() {
+    zOrderListeners.push_back(this);
+}
+
+void ZOrderListener::update(BasicEditorComponent* changed) {
+    for (ZOrderListener* listener : zOrderListeners)
+        listener->onZOrderChange(changed);
 }

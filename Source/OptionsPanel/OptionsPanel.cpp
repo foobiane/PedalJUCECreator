@@ -41,12 +41,17 @@ void OptionsPanel::onSelectionChange() {
         previouslySelectedComponent = currentlySelectedComponent;
 
         if (currentlySelectedComponent != nullptr) {
+            if (25 * currentlySelectedComponent->controls.size() + 30 + 2 > getBounds().getHeight())
+                setBounds(getPosition().x, getPosition().y, panelWidth, 25 * currentlySelectedComponent->controls.size() + 30 + 2);
+
             for (int i = 0; i < currentlySelectedComponent->controls.size(); i++) {
                 juce::Component* c = currentlySelectedComponent->controls[i].second;
                 c->setBounds(85, (25 * i) + 30 + 2, panelWidth - 95, 21);
                 addAndMakeVisible(c);
             }
         }
+        else
+            setBounds(getPosition().x, getPosition().y, panelWidth, panelHeight);
     }
 
     repaint(); // TODO: Determine if this is necessary in all control paths

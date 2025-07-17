@@ -44,6 +44,7 @@ class BasicEditorComponent : public juce::Component
         float getHeight() { return height; }
         juce::Colour getColour() { return juce::Colour(hue, saturation, lightness, alpha); }
         std::string getEditorComponentName() { return editorComponentName; }
+        int getZOrder() { return zOrder; }
 
         // Setters
         // Since changes to these parameters should cause a visual change, we need to add logic
@@ -54,6 +55,7 @@ class BasicEditorComponent : public juce::Component
         void setSaturation(float newSaturation);
         void setLightness(float newLightness);
         void setAlpha(float newAlpha);
+        void setZOrder(int newZOrder);
 
         std::vector<std::pair<std::string, juce::Component*>> controls;
 
@@ -67,6 +69,8 @@ class BasicEditorComponent : public juce::Component
         float saturation;
         float lightness;
         float alpha;
+
+        int zOrder = -1;
 
         virtual void addSlider(std::string name, float initialValue, float min, float max, float interval, ComponentCallback<juce::Slider> valueChangeCallback, juce::Slider::SliderStyle style = juce::Slider::SliderStyle::LinearHorizontal) final;
         virtual void addDropdown(std::string name, std::string initialValue, std::vector<std::string> options, ComponentCallback<juce::ComboBox> valueChangeCallback) final;
@@ -164,13 +168,29 @@ extern std::vector<SelectedComponentListener*> selectedComponentListeners;
  * 
  * Classes that inherit this are able to listen for changes in any editor component.
  */
- class EditorComponentListener {
+class EditorComponentListener {
     public:
         EditorComponentListener();
         virtual ~EditorComponentListener() = default;
 
         virtual void onEditorComponentChange() = 0; 
         static void update();
- };
+};
 
 extern std::vector<EditorComponentListener*> editorComponentListeners;
+
+/**
+ * ZOrderListener:
+ * 
+ * Classes that inherit this are able to listen for zOrder changes in a component.
+ */
+class ZOrderListener {
+    public:
+        ZOrderListener();
+        virtual ~ZOrderListener() = default;
+
+        virtual void onZOrderChange(BasicEditorComponent* changed) = 0;
+        static void update(BasicEditorComponent* changed);
+};
+
+extern std::vector<ZOrderListener*> zOrderListeners;

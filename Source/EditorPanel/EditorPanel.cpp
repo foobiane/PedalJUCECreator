@@ -49,6 +49,11 @@ void EditorPanel::mouseUp(const juce::MouseEvent& e) {
     }
 }
 
+void EditorPanel::onZOrderChange(BasicEditorComponent* changed) {
+    removeChildComponent(changed);
+    addAndMakeVisible(changed, changed->getZOrder());
+}
+
 void EditorPanel::addComponentToEditor(const std::string& name) {
     BasicEditorComponent* toAdd = nullptr;
 
@@ -59,7 +64,7 @@ void EditorPanel::addComponentToEditor(const std::string& name) {
         toAdd = new TextComponent(this, 200, 50, juce::Colours::white);
 
     editorComponents.insert(toAdd);
-    addAndMakeVisible(toAdd);
+    addAndMakeVisible(toAdd, toAdd->getZOrder());
 }
 
 void EditorPanel::removeComponentFromEditor(BasicEditorComponent* who) {

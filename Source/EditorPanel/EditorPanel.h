@@ -5,7 +5,7 @@
 #include "EditorComponents/BasicEditorComponent.h"
 #include "EditorComponents/Components.h"
 
-class EditorPanel : public juce::Component {
+class EditorPanel : public juce::Component, public ZOrderListener {
     public:
         EditorPanel(float x, float y, float editorWidth, float editorHeight);
         ~EditorPanel();
@@ -14,6 +14,8 @@ class EditorPanel : public juce::Component {
         virtual void resized() override;
 
         virtual void mouseUp(const juce::MouseEvent& e) override;
+
+        virtual void onZOrderChange(BasicEditorComponent* changed) override;
 
         void addComponentToEditor(const std::string& name);
         void removeComponentFromEditor(BasicEditorComponent* who);

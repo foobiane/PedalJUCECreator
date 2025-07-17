@@ -23,6 +23,7 @@ std::string CodePanel::generateCodeForAllEditorComponents() {
     std::string constructorCode = "";
     std::string paintCode = "";
 
+    // TODO: Create a priority system based on the ZOrder of components.
     for (BasicEditorComponent* editorComponent : editorPanel->editorComponents) {
         constructorCode += editorComponent->generateConstructorCode();
         paintCode += editorComponent->generatePaintCode();
