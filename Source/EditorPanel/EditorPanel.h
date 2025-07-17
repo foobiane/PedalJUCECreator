@@ -20,6 +20,9 @@ class EditorPanel : public juce::Component {
 
         juce::Rectangle<float> getMinimumBoundingBoxForComponents();
 
+        float getEditorWidth() { return editorWidth; }
+        float getEditorHeight() { return editorHeight; }
+
         std::unordered_set<BasicEditorComponent*> editorComponents;
 
     private:

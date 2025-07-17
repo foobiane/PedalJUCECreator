@@ -26,6 +26,10 @@ BasicEditorComponent::BasicEditorComponent(std::string editorComponentName, Edit
     alpha(hslaColour.getFloatAlpha()),
     trashIcon(this)
 {
+    // All editor objects will have these basic sliders.
+    addSlider("X", getPosition().x, 0, editorPanel->getEditorWidth(), 1, [this](juce::Slider* s){setTopLeftPosition(juce::Point<int>(s->getValue(), getPosition().y));});
+    addSlider("Y", getPosition().y, 0, editorPanel->getEditorHeight(), 1, [this](juce::Slider* s){setTopLeftPosition(juce::Point<int>(getPosition().x, s->getValue()));});
+
     addSlider("Width", width, 0, 1000, 1, [this](juce::Slider* s){setWidth(s->getValue());});
     addSlider("Height", height, 0, 1000, 1, [this](juce::Slider* s){setHeight(s->getValue());});
 
@@ -59,7 +63,7 @@ void BasicEditorComponent::adjustBounds() {
     repaint();
 }
 
-void BasicEditorComponent::addSlider(std::string name, float initialValue, float min, float max, float interval, std::function<void(juce::Slider* s)> valueChangeCallback, juce::Slider::SliderStyle style) {
+void BasicEditorComponent::addSlider(std::string name, float initialValue, float min, float max, float interval, ComponentCallback<juce::Slider> valueChangeCallback, juce::Slider::SliderStyle style) {
     assert(initialValue >= min && initialValue <= max);
     
     controls.push_back({name, new juce::Slider(name)});
@@ -72,7 +76,7 @@ void BasicEditorComponent::addSlider(std::string name, float initialValue, float
     s->onValueChange = [s, valueChangeCallback](){valueChangeCallback(s);};
 }
 
-void BasicEditorComponent::addDropdown(std::string name, std::string initialValue, std::vector<std::string> options, std::function<void(juce::ComboBox* c)> valueChangeCallback) {
+void BasicEditorComponent::addDropdown(std::string name, std::string initialValue, std::vector<std::string> options, ComponentCallback<juce::ComboBox> valueChangeCallback) {
     assert(std::find(options.begin(), options.end(), initialValue) != options.end());
 
     controls.push_back({name, new juce::ComboBox(name)});
@@ -85,7 +89,7 @@ void BasicEditorComponent::addDropdown(std::string name, std::string initialValu
     c->onChange = [c, valueChangeCallback](){valueChangeCallback(c);};
 }
 
-void BasicEditorComponent::addButton(std::string name, bool isToggle, std::function<void(juce::Button*)> valueChangeCallback) {
+void BasicEditorComponent::addButton(std::string name, bool isToggle, ComponentCallback<juce::Button> valueChangeCallback) {
     controls.push_back({name, new juce::TextButton(name)});
     juce::Button* b = (juce::Button*) controls[controls.size() - 1].second;
 
@@ -93,7 +97,7 @@ void BasicEditorComponent::addButton(std::string name, bool isToggle, std::funct
     b->onClick = [b, valueChangeCallback](){valueChangeCallback(b);};
 }
 
-void BasicEditorComponent::addButtonString(std::string buttonStringName, std::vector<std::tuple<std::string, bool, std::function<void(juce::Button*)>>> namesAndToggle) {
+void BasicEditorComponent::addButtonString(std::string buttonStringName, std::vector<std::tuple<std::string, bool, ComponentCallback<juce::Button>>> namesAndToggle) {
     std::vector<juce::TextButton*> buttons;
 
     for (auto& info : namesAndToggle) {
@@ -109,12 +113,23 @@ void BasicEditorComponent::addButtonString(std::string buttonStringName, std::ve
     controls.push_back({buttonStringName, new TextButtonString(buttons)});
 }
 
+void BasicEditorComponent::addTextBox(std::string name, std::string initialText, ComponentCallback<juce::TextEditor> valueChangeCallback) {
+    controls.push_back({name, new juce::TextEditor(name)});
+    juce::TextEditor* t = (juce::TextEditor*) controls[controls.size() - 1].second;
+
+    t->onTextChange = [t, valueChangeCallback](){valueChangeCallback(t);};
+    t->setText(initialText);
+}
+
 void BasicEditorComponent::mouseDown(const juce::MouseEvent& e) {
     drag.startDraggingComponent(this, e);
 }
 
 void BasicEditorComponent::mouseDrag(const juce::MouseEvent& e) {
     drag.dragComponent(this, e, nullptr);
+
+    ((juce::Slider*) controls[0].second)->setValue(getPosition().x);
+    ((juce::Slider*) controls[1].second)->setValue(getPosition().y);
 }
 
 void BasicEditorComponent::mouseUp(const juce::MouseEvent& e) {
@@ -125,7 +140,7 @@ void BasicEditorComponent::mouseUp(const juce::MouseEvent& e) {
     )
         currentlySelectedComponent->toggleTrashVisibility(); // turn off trash icon for previous selection, if applicable
 
-    else if (currentlySelectedComponent != this) {
+    if (currentlySelectedComponent != this) {
         currentlySelectedComponent = this;
         currentlySelectedComponent->toggleTrashVisibility(); // turn on trash icon for new selection
 

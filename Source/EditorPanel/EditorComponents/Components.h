@@ -28,26 +28,29 @@ class RectangleComponent : public BasicEditorComponent {
         float cornerSize;
 };
 
-class TextComponent : public BasicEditorComponent {
+class TextComponent : public BasicEditorComponent, public SelectedComponentListener {
     public:
         TextComponent(EditorPanel* editorPanel, float width, float height, juce::Colour hslaColour);
 
         virtual void paint(juce::Graphics& g) override;
         virtual void resized() override;
 
-        void setFontSize(float newFontSize);
-        void setFont(std::string newFontName);
-        void setStyleFlags(int styleFlags);
+        virtual void onSelectionChange() override;
+
+        void setText(std::string newText);
+        void setFont(juce::Font newFont);
 
         virtual std::string generateConstructorCode() override;
         virtual std::string generatePaintCode() override;
 
     private:
-        juce::TextEditor textBox;
+        std::vector<std::string> fontsToUse;
+        void initializeFontsToUse();
 
-        float fontSize;
-        std::string fontName;
-        int styleFlags;
+        std::string text;
+        juce::Font font;
+
+        bool isSelected = false;
 };
 
 class CircleComponent : public BasicEditorComponent {

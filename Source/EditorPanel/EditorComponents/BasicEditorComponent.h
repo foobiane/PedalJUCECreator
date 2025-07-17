@@ -5,8 +5,12 @@
 #include <string>
 #include <vector>
 
-// Forward declarations
+// Forward declaration
 class EditorPanel;
+
+// I'm genuinely SICK of having to type this out.
+template <typename T>
+using ComponentCallback = std::function<void(T*)>;
 
 /**
  * BasicEditorComponent:
@@ -64,10 +68,11 @@ class BasicEditorComponent : public juce::Component
         float lightness;
         float alpha;
 
-        virtual void addSlider(std::string name, float initialValue, float min, float max, float interval, std::function<void(juce::Slider*)> valueChangeCallback, juce::Slider::SliderStyle style = juce::Slider::SliderStyle::LinearHorizontal) final;
-        virtual void addDropdown(std::string name, std::string initialValue, std::vector<std::string> options, std::function<void(juce::ComboBox*)> valueChangeCallback) final;
-        virtual void addButton(std::string name, bool isToggle, std::function<void(juce::Button*)> valueChangeCallback) final;
-        virtual void addButtonString(std::string buttonStringName, std::vector<std::tuple<std::string, bool, std::function<void(juce::Button*)>>> info) final;
+        virtual void addSlider(std::string name, float initialValue, float min, float max, float interval, ComponentCallback<juce::Slider> valueChangeCallback, juce::Slider::SliderStyle style = juce::Slider::SliderStyle::LinearHorizontal) final;
+        virtual void addDropdown(std::string name, std::string initialValue, std::vector<std::string> options, ComponentCallback<juce::ComboBox> valueChangeCallback) final;
+        virtual void addButton(std::string name, bool isToggle, ComponentCallback<juce::Button> valueChangeCallback) final;
+        virtual void addButtonString(std::string buttonStringName, std::vector<std::tuple<std::string, bool, ComponentCallback<juce::Button>>> info) final;
+        virtual void addTextBox(std::string name, std::string initialText, ComponentCallback<juce::TextEditor> valueChangeCallback);
 
         EditorPanel* editorPanel;
 
@@ -121,8 +126,8 @@ class TextButtonString : public juce::Component {
             int buttonWidth = (bounds.getWidth() / buttons.size()) * 0.9f;
             int horizontalPad = ((bounds.getWidth() / buttons.size()) - buttonWidth) / 2;
 
-            int buttonHeight = (bounds.getHeight() / buttons.size()) * 0.9f;
-            int verticalPad = ((bounds.getHeight() / buttons.size()) - buttonHeight) / 2;
+            int buttonHeight = bounds.getHeight() * 0.9f;
+            int verticalPad = (bounds.getHeight() - buttonHeight) / 2;
 
             for (int i = 0; i < buttons.size(); i++) {
                 buttons[i]->setBounds(horizontalPad + (i * (buttonWidth + 2 * horizontalPad)), verticalPad, buttonWidth, buttonHeight);
@@ -139,9 +144,8 @@ class TextButtonString : public juce::Component {
 /**
  * SelectedComponentListener:
  * 
- * Contains the logic for the classes that listen for the currently selected component.
+ * Classes that inherit this are able to listen for changes in the currently selected component.
  */
-
 extern BasicEditorComponent* currentlySelectedComponent;
 
 class SelectedComponentListener {
@@ -158,9 +162,8 @@ extern std::vector<SelectedComponentListener*> selectedComponentListeners;
 /**
  * EditorComponentListener:
  * 
- * Contains the logic for classes that listen for changes in any editor component.
+ * Classes that inherit this are able to listen for changes in any editor component.
  */
-
  class EditorComponentListener {
     public:
         EditorComponentListener();

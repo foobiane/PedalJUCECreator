@@ -13,16 +13,16 @@ void OptionsPanel::paint(juce::Graphics& g) {
 
     if (currentlySelectedComponent != nullptr) {
         g.setColour(juce::Colours::white);
-        g.setFont(juce::Font(juce::FontOptions("Arial", 36.0f, juce::Font::plain)));
+        g.setFont(juce::Font(juce::FontOptions("Arial", 20.0f, juce::Font::plain)));
 
-        g.drawFittedText(currentlySelectedComponent->getEditorComponentName(), 10, 10, panelWidth - 20, 55, juce::Justification::Flags::centred, 1);
+        g.drawFittedText(currentlySelectedComponent->getEditorComponentName(), 10, 5, panelWidth - 20, 25, juce::Justification::Flags::centred, 1);
 
         g.setFont(juce::Font(juce::FontOptions("Arial", 12.0f, juce::Font::plain)));
 
         for (int i = 0; i < currentlySelectedComponent->controls.size(); i++) {
             std::string name = currentlySelectedComponent->controls[i].first;
 
-            g.drawFittedText(name, 10, 25 * i + 75, 75, 25, juce::Justification::Flags::left, 1);
+            g.drawFittedText(name, 10, (25 * i) + 30 + 2, 75, 21, juce::Justification::Flags::left, 1);
         }
     }
 }
@@ -43,8 +43,7 @@ void OptionsPanel::onSelectionChange() {
         if (currentlySelectedComponent != nullptr) {
             for (int i = 0; i < currentlySelectedComponent->controls.size(); i++) {
                 juce::Component* c = currentlySelectedComponent->controls[i].second;
-
-                c->setBounds(85, 25 * i + 75, panelWidth - 95, 25);
+                c->setBounds(85, (25 * i) + 30 + 2, panelWidth - 95, 21);
                 addAndMakeVisible(c);
             }
         }

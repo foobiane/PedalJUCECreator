@@ -15,7 +15,8 @@ EditorPanel::EditorPanel(float x, float y, float editorWidth, float editorHeight
     };
 
     componentSelect.addItemList(juce::StringArray({
-        "Rectangle"
+        "Rectangle",
+        "Text"
     }), 1);
     componentSelect.setText("Rectangle");
 
@@ -49,12 +50,16 @@ void EditorPanel::mouseUp(const juce::MouseEvent& e) {
 }
 
 void EditorPanel::addComponentToEditor(const std::string& name) {
-    if (name == "Rectangle") {
-        BasicEditorComponent* rect = new RectangleComponent(this, 100, 100, juce::Colour(0.5f, 0.5f, 0.5f, 1.0f));
-        editorComponents.insert(rect);
+    BasicEditorComponent* toAdd = nullptr;
 
-        addAndMakeVisible(rect);
-    }
+    if (name == "Rectangle") 
+        toAdd = new RectangleComponent(this, 100, 100, juce::Colour(0.5f, 0.5f, 0.5f, 1.0f));
+
+    else if (name == "Text")
+        toAdd = new TextComponent(this, 200, 50, juce::Colours::white);
+
+    editorComponents.insert(toAdd);
+    addAndMakeVisible(toAdd);
 }
 
 void EditorPanel::removeComponentFromEditor(BasicEditorComponent* who) {
